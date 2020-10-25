@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Helpers;
+namespace Seven\Consoler;
 
-use App\Providers\{Strings, Schema};
+use Seven\Vars\Strings;
 
 class Console
 {
@@ -65,11 +65,22 @@ class Console
 
     public static function migrate($argv)
     {
-        Schema::run();
-        foreach (app()->get('ENGINE')['MIGRATIONS'] as $value) {
-            self::generateModel($value);
-        }
-        return;
+        $schema = new SchemaMap([
+            'directory' => __DIR__.DS.'migration',
+            'migrator'  => 'Migration.php',
+            'populator' => 'Population.php'
+        ]);
+        $schema->migrate();
+    }
+
+    public function populate()
+    {
+        $schema = new SchemaMap([
+            'directory' => __DIR__.DS.'migration',
+            'migrator'  => 'Migration.php',
+            'populator' => 'Population.php'
+        ]);
+        $schema->populate();
     }
 
     public static function production()
@@ -94,9 +105,14 @@ class Console
         rmdir(ROOT.DS.'tests'.DS);
         rmdir(ROOT.DS.'Engineer');
         rmdir(ROOT.DS.'.gitignore');
+        rmdir(ROOT.DS.'Migration.History');
         rmdir(ROOT.DS.'readme.md');
         shell_exec("composer remove seven/consoler");
         shell_exec("composer -o");
+        file_put_contents(ROOT.DS."index.php", implode('', array_map(function ($data) {
+            return (strstr($data, "//\$router->enableCache(__DIR__.'/cache');")) ?
+                "\$router->enableCache(__DIR__.'/cache');" : $data;
+        }, file($file))));
     }
 
     public static function writeToFile($directory, $fileName, $content)

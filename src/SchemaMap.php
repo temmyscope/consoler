@@ -1,8 +1,10 @@
 <?php
-namespace Seven\Migration;
+namespace Seven\Consoler;
 
 use \PDO;
 use \PDOException;
+
+use Seven\Model\Model;
 
 class SchemaMap{
 
@@ -12,25 +14,26 @@ class SchemaMap{
 		'populator' => 'Population.php'
 	]){
 		$this->directory = $config['directory'];
-		$this->migrator = @include(
-			$this->directory.DIRECTORY_SEPARATOR.$config['migrator']
-		) 
-		?? 
-		exit("Something is Wrong:\n
-			1. Check that you passed a valid configuration parameter to the __construct.\n
-			2. Ensure that your file is a valid php file returning an array E.g. <?php \nreturn [\n];
-		");
+		$this->populator = $this->directory.DIRECTORY_SEPARATOR.$config['migrator'];
+		$this->migrator = $this->directory.DIRECTORY_SEPARATOR.$config['migrator']
+		
+		if (empty($config)) {
+			exit("Something is Wrong:\n
+				1. Check that you passed a valid configuration parameter to the __construct.\n
+				2. Ensure that your file is a valid php file returning an array E.g. <?php \nreturn [\n];
+			");
+		}
 		$this->time = (new \DateTime('now', new \DateTimeZone('UTC')))->format('Y-m-d H:i:s');
 	}
 
 	public function db($value)
 	{
 		try {
-			$user = $_ENV['DB_USER'];
-			$password = $_ENV['DB_PASS'];
-			$server = $_ENV['DB_HOST'];
-			$db = str_replace("pdo_", '', $_ENV['DB_DRIVER']);
-			$collate = $_ENV["COLLATE"] ?? "utf8mb4_unicode_ci";
+			$user = getenv('DB_USER'];
+			$password = getenv('DB_PASS'];
+			$server = getenv('DB_HOST'];
+			$db = str_replace("pdo_", '', getenv('DB_DRIVER']);
+			$collate = getenv("COLLATE"] ?? "utf8mb4_unicode_ci";
     	$conn = new PDO("$db:host=$server;", $user, $password);
     	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     	$conn->exec("CREATE DATABASE {$value} COLLATE $col;");
@@ -50,37 +53,19 @@ class SchemaMap{
 		$fileHandle = fopen($this->directory.'/'.'Migrations.History', 'a+');
 		fwrite($fileHandle, $message);
 		echo "Schema Transaction Completed Successfully. \nView Transaction Log in Migration.History\n", "\n";
-	}	
-
-	public static function run()
-	{	
-		try {
-			$dbname = $_ENV[ 'DB_NAME' ];
-			$user = $_ENV[ 'DB_USER' ];
-			$password = $_ENV[ 'DB_PASS' ];
-			$server = $_ENV[ 'DB_HOST' ];
-			$db = str_replace("pdo_", '', $_ENV[ 'DB_DRIVER' ]);
-    	$conn = new PDO("$db:host=$server;dbname=$dbname", $user, $password);
-    	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    	$scheme = new MigrationEngine;
-    	$this->parserIfExists($scheme, $conn);
-    	$this->InsertIfExists($scheme);
-    }catch(PDOException $e){
-	    echo $e->getMessage();
-    }
 	}
 
 	public function migrate()
 	{
 		try {
-			$dbname = $_ENV['DB_NAME'];
-			$user = $_ENV['DB_USER'];
-			$password = $_ENV['DB_PASS'];
-			$server = $_ENV['DB_HOST'];
-			$db = str_replace("pdo_", '', $_ENV['DB_DRIVER']);
+			$dbname = getenv('DB_NAME');
+			$user = getenv('DB_USER');
+			$password = getenv('DB_PASS');
+			$server = getenv('DB_HOST');
+			$db = str_replace("pdo_", '', getenv('DB_DRIVER'));
     	$conn = new PDO("$db:host=$server;dbname=$dbname", $user, $password);
     	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    	$this->parserIfExists($this, $conn);
+    	$this->parserIfExists($conn);
     }catch(PDOException $e){
 	    echo $e->getMessage();
     }
@@ -89,31 +74,31 @@ class SchemaMap{
 	public function populate()
 	{
 		try {
-			$dbname = $_ENV[ 'DB_NAME' ];
-			$user = $_ENV[ 'DB_USER' ];
-			$password = $_ENV[ 'DB_PASS' ];
-			$server = $_ENV[ 'DB_HOST' ];
-			$db = str_replace("pdo_", '', $_ENV['DB_DRIVER']);
+			$dbname = getenv( 'DB_NAME');
+			$user = getenv( 'DB_USER');
+			$password = getenv( 'DB_PASS' );
+			$server = getenv( 'DB_HOST' );
+			$db = str_replace("pdo_", '', getenv('DB_DRIVER'));
     	$conn = new PDO("$db:host=$server;dbname=$dbname", $user, $password);
     	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    	$this->insertIfExists($this, $conn);
+    	$this->insertIfExists($conn);
     }catch(PDOException $e){
 	    echo $e->getMessage();
     }
 	}
 
-	protected static function queryMe($sql, $conn)
+	protected function queryMe($sql, $conn)
 	{
 		try {
 			$conn->exec($sql);
-	    }catch(PDOException $e){
-		    echo $e->getMessage();
-	    }
+    }catch(PDOException $e){
+	    echo $e->getMessage();
+    }
 	}
 
-	protected static function insertIfExists($scheme)
+	protected function insertIfExists($scheme)
 	{
-		$data = $scheme->populate();
+		$data = @include $this->populator ?? throw new \Exception("Error Loading Population.php File", 1);
 		if (!empty($data)) {
 			foreach ($data as $table => $entry) {
 				Model::setTable($table)->insert($entry);
@@ -122,8 +107,9 @@ class SchemaMap{
 		}
 	}
 
-	protected function parserIfExists($scheme, $conn)
+	protected function parserIfExists($conn)
 	{
+		$this->migrator = @include $this->migrator ?? throw new \Exception("Error Loading Migration File", 1);
 		if ( !is_array($this->migrator) || empty($this->migrator)) {
 			echo "Migration.php must return Array & can not be empty";
 			return;
@@ -137,7 +123,7 @@ class SchemaMap{
 					$queue[] = str_replace(":column", $key, str_replace(":table", $table, $value[1]) );
 				}
 			}
-			self::queryMe(rtrim($_sql, ', ').");", $conn);
+			$this->queryMe(rtrim($_sql, ', ').");", $conn);
 			foreach ($queue as $key => $value) {
 				self::queryMe(str_replace(':table', $table, $value), $conn);
 			}
