@@ -8,13 +8,25 @@ Built Specifically for Altvel and can only be ported with a lot of code change. 
 	=> Console Command
 
 
+### Installation
+##
+	=> This will already be pre-installed with Altvel Framework
+
+```bash
+composer require sevens/consoler
+```
+
 
 ### Initializing the SchemaMap Engine
 ##
-	=> only Populator is not required 
+	=> Since You're most likely using Altvel Framework Engineer Console, You won't be setting this up.
 ```php
 
-$schemaMap = new SchemaMap($config = [ 'directory' => __DIR__, 'migrator'  => 'Migration.php', 'populator' => 'Population.php'])
+$schemaMap = new SchemaMap($config = [ 
+	'directory' => __DIR__.'/migration', 
+	'migrator'  => 'Migration.php', 
+	'populator' => 'Population.php'
+]);
 
 ```
 
@@ -24,9 +36,7 @@ $schemaMap = new SchemaMap($config = [ 'directory' => __DIR__, 'migrator'  => 'M
 	=> id is automatically generated on all tables by the schemaMap Engine
 
 ```php
-
 return[
-
 	'users' => [
 		'name' => $this->string($max_length=125, $null=false),
 		'email' => $this->string($max_length=125, $null=false, $key='unique'),
@@ -52,13 +62,22 @@ return[
 		'created_at' => $this->dateTime(),
 		'deleted' => $this->oneOf($options=["'true'", "'false'"], $default="'false'" )
 	],
-
 ];
-
 ```
 
-# Populator file
+### Usage: Populator file
+##
 
+***Populate a table with data by adding array of arrays to the population.php return array in this format***
+
+```php
+return [
+	'table name' => [ 'column name' => 'value' , 'column name' => 'value' , 'column name' => 'value' ],
+	'table name' => [...],
+];
+```
+
+***Example Use Case***
 ```php
 
 return [
@@ -68,8 +87,7 @@ return [
 			'name' => "Elisha TemmyScope",
 			'email' => "esdentemmy@gmail.com",
 			'password' => hash("password"),
-			'backup_pass' => hash("random_token"),
-			'activation' => "another random code",
+			'activation' => "random code",
 			'verified' => "false",
 			'created_at' => date("Y-m-d h:i:s"),
 			'deleted' => "false"

@@ -29,11 +29,11 @@ class SchemaMap{
 	public function db($value)
 	{
 		try {
-			$user = getenv('DB_USER'];
-			$password = getenv('DB_PASS'];
-			$server = getenv('DB_HOST'];
-			$db = str_replace("pdo_", '', getenv('DB_DRIVER']);
-			$collate = getenv("COLLATE"] ?? "utf8mb4_unicode_ci";
+			$user = getenv('DB_USER');
+			$password = getenv('DB_PASS');
+			$server = getenv('DB_HOST');
+			$db = str_replace("pdo_", '', getenv('DB_DRIVER'));
+			$collate = getenv("COLLATE", "utf8mb4_unicode_ci");
     	$conn = new PDO("$db:host=$server;", $user, $password);
     	$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     	$conn->exec("CREATE DATABASE {$value} COLLATE $col;");
@@ -52,6 +52,7 @@ class SchemaMap{
 	{
 		$fileHandle = fopen($this->directory.'/'.'Migrations.History', 'a+');
 		fwrite($fileHandle, $message);
+		fclose($fileHandle);
 		echo "Schema Transaction Completed Successfully. \nView Transaction Log in Migration.History\n", "\n";
 	}
 
@@ -109,12 +110,12 @@ class SchemaMap{
 
 	protected function parserIfExists($conn)
 	{
-		$this->migrator = @include $this->migrator ?? throw new \Exception("Error Loading Migration File", 1);
-		if ( !is_array($this->migrator) || empty($this->migrator)) {
+		$migrator = @include $this->migrator ?? throw new \Exception("Error Loading Migration File", 1);
+		if ( !is_array($migrator) || empty($migrator)) {
 			echo "Migration.php must return Array & can not be empty";
 			return;
 		}
-		foreach ($this->migrator as $table => $columns) {
+		foreach ($migrator as $table => $columns) {
 			$queue = ["ALTER TABLE :table ADD PRIMARY KEY (id);", "ALTER TABLE :table  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;"];
 			$_sql = "CREATE TABLE `{$table}` ( id int(11) NOT NULL, ";
 			foreach($columns as $key => $value){
@@ -131,8 +132,15 @@ class SchemaMap{
 			$this->log(
 				"TABLE: \n\t[ NAME => $table, COLUMNS => $columns, MODE => MIGRATED, CREATED_AT => {$this->time} ]\n"
 			);
-			
 		}
+		$this->cleanFile($this->migrator);
+	}
+
+	public function cleanFile($file)
+	{
+		$fh = fopen($file, 'w');
+		fwrite($fh, "<?php return [];");
+		fclose($fh);
 	}
 
 	public function integer($max_length=10)
