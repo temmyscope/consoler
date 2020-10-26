@@ -4,6 +4,8 @@ namespace Seven\Consoler;
 
 use Seven\Vars\Strings;
 
+use \RecursiveDirectoryIterator;
+
 class Console
 {
     public static function parse($argc, $argv)
@@ -98,9 +100,9 @@ class Console
         echo "Do you have a development backup for your project, (Y/N)?\n";
         $fp = fopen('php://stdin', 'r');
         $data = strtolower(fgets($fp, 1024));
-        if ($data === 'y') {
+        if ( str_contains($data, 'y') ) {
             return self::removeDevTools();
-        } elseif ($data === 'n') {
+        } elseif ( str_contains($data, 'n') ) {
             echo "Please create a development backup, then re-run this command.";
             return;
         } else {
@@ -112,7 +114,7 @@ class Console
     {
         if(is_dir($dir)){
             $it = new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS);
-            $files = new \RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
+            $files = new \RecursiveIteratorIterator($it, \RecursiveIteratorIterator::CHILD_FIRST);
             foreach($files as $file) {
                 if ($file->isDir()){
                     rmdir($file->getRealPath());
@@ -130,17 +132,18 @@ class Console
         self::directoryRemover(ROOT . DS . 'migration');
         self::directoryRemover(ROOT . DS . 'tests');
         self::directoryRemover(ROOT . DS . '.git');
-        unlink(ROOT . DS . 'composer.json');
-        unlink(ROOT . DS . 'composer.lock');
+        self::changeLine(ROOT . DS . "index.php", 
+            "//\$router->enableCache(__DIR__.'/cache');",
+            "\$router->enableCache(__DIR__.'/cache');"
+        );
+        echo "Route Caching Enabled in index.php File\n";
+        shell_exec("composer remove seven/consoler");
         unlink(ROOT . DS . 'Engineer');
         unlink(ROOT . DS . '.gitignore');
-        unlink(ROOT . DS . 'Migration.History');
         unlink(ROOT . DS . 'readme.md');
-        shell_exec("composer remove seven/consoler");
-        file_put_contents(ROOT . DS . "index.php", implode('', array_map(function ($data) {
-            return (strstr($data, "//\$router->enableCache(__DIR__.'/cache');")) ?
-                "\$router->enableCache(__DIR__.'/cache');" : $data;
-        }, file($file))));
+        unlink(ROOT . DS . 'composer.json');
+        unlink(ROOT . DS . 'composer.lock');
+        echo "Production Version Trimming completed.";
     }
 
     public static function writeToFile($directory, $fileName, $content)
@@ -208,12 +211,6 @@ class Console
         'jpg' => 'image/jpeg',
         'png' => 'image/png', 
         'jpeg' => 'image/jpeg'
-    ],
-
-
-    #Database Migration Settings
-    'ENGINE' => [
-        'GENERATE_MODEL' => true
     ],
 
     #Html Templates
