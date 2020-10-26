@@ -15,8 +15,7 @@ class SchemaMap{
 	]){
 		$this->directory = $config['directory'];
 		$this->populator = $this->directory.DIRECTORY_SEPARATOR.$config['migrator'];
-		$this->migrator = $this->directory.DIRECTORY_SEPARATOR.$config['migrator']
-		
+		$this->migrator = $this->directory.DIRECTORY_SEPARATOR.$config['migrator'];
 		if (empty($config)) {
 			exit("Something is Wrong:\n
 				1. Check that you passed a valid configuration parameter to the __construct.\n
@@ -105,6 +104,7 @@ class SchemaMap{
 				Model::setTable($table)->insert($entry);
 				echo "Data has been inserted into ", $table, " table.";
 			}
+			$this->cleanFile($this->populator);
 		}
 	}
 
