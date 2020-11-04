@@ -17,8 +17,8 @@
     },
     "require": {
         "php": ">=7.2.0",
-        "sevens/vars": "v2.0.0",
-        "sevens/model-trait": "v2.5.0"
+        "sevens/vars": "v1.0.0",
+        "sevens/model-trait": "v1.0.0"
     },
     "authors": [
         {
