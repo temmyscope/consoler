@@ -37,7 +37,7 @@ class Console
         $name = strtolower(str_ireplace('controller', '', $name));
         $nm = ucfirst($name);
         self::writeToFile(ROOT . DS . "app" . DS . "Controllers", "{$nm}Controller.php", "<?php \nnamespace App\Controllers;\n\nuse Seven\Vars\Strings;\n\nclass {$nm}Controller extends Controller{\n\n\tpublic function index(){ \n\t\tview('{$name}.index'); \n\t}\n}");
-        self::generateModel($name);
+        self::Model([$name]);
         print("{$nm}Controller and corresponding Model has been generated.\n\n");
     }
 

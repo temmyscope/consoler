@@ -24,7 +24,7 @@ class SchemaMap
                 2. Ensure that your file is a valid php file returning an array E.g. <?php \nreturn [\n];
             ");
         }
-        $this->time = (new \DateTime('now', new \DateTimeZone(env('APP_TIMEZONE'))))->format('Y-m-d H:i:s');
+        $this->time = (new \DateTime('now', new \DateTimeZone(env('APP_TIMEZONE', 'UTC'))))->format('Y-m-d H:i:s');
     }
 
     public function db($value)
