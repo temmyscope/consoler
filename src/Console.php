@@ -36,7 +36,7 @@ class Console
         $name = $argv[0] ?? self::receiveInput('controller');
         $name = strtolower(str_ireplace('controller', '', $name));
         $nm = ucfirst($name);
-        self::writeToFile(ROOT . DS . "app" . DS . "Controllers", "{$nm}Controller.php", "<?php \nnamespace App\Controllers;\n\nuse Seven\Vars\Strings;\n\nclass {$nm}Controller extends Controller{\n\n\tpublic function index(){ \n\t\tview('{$name}.index'); \n\t}\n}");
+        self::writeToFile(ROOT . DS . "app" . DS . "Controllers", "{$nm}Controller.php", "<?php \nnamespace App\Controllers;\n\nclass {$nm}Controller extends Controller{\n\n\tpublic function index(){\n\t\t\n\t}\n}");
         self::Model([$name]);
         print("{$nm}Controller and corresponding Model has been generated.\n\n");
     }
@@ -46,7 +46,7 @@ class Console
         $name = $argv[0] ?? self::receiveInput('view');
         $fileName = $argv[1] ?? "index";
         $nm = ucfirst($name);
-        self::writeToFile(ROOT . DS . 'public' . DS . 'view' . DS . $name, $fileName . ".blade.php", "@extends('app')\n@section('title', '{$nm}')\n@section('content')\n\n\t<?php use App\Helpers\HTML; ?> \n\n\t<?= HTML::Card('{$nm}'); ?>\n\tThis is the {$nm} landing page\n\n@endsection");
+        self::writeToFile(ROOT . DS . 'public' . DS . 'view' . DS . $name, $fileName . ".blade.php", "@extends('app')\n@section('title', '{$nm}')\n@section('content')\n\n\n\tThis is the {$nm} landing page\n\n@endsection");
         print("{$nm} view has been generated.\n\n");
     }
 
@@ -200,7 +200,6 @@ class Console
     'REMEMBER_ME_COOKIE_EXPIRY' => 2592000,
     'REDIRECT' => '',
 
-
     #Files, Filesystem and Storage Upload Settings
     'cdn' => __DIR__.'/../public/cdn',
     'view' => __DIR__.'/../public/view',
@@ -212,18 +211,6 @@ class Console
         'png' => 'image/png', 
         'jpeg' => 'image/jpeg'
     ],
-
-    #Html Templates
-    /*----------------------------------------------------------------------------------------------|
-    |                               ALTVEL/LARAFELL NAVIGATION BAR                                  |
-    |-----------------------------------------------------------------------------------------------|
-    |   this helps in setting the menu bar for guest users and loggged in users based on the array  |
-    |   associative arrays can be used for menus with dropdown...                                   | 
-    -----------------------------------------------------------------------------------------------*/
-
-    'USER_NAVBAR' => ['Home' => 'home', 'Search' => 'search', 'Logout' => 'logout'],
-    'GUEST_NAVBAR' => ['Login' => 'login', 'Register' => 'register', 'About' => 'about'],
-
 ];";
         self::writeToFile(ROOT . DS . 'config', 'app.php', $vw);
         $config = ROOT . DS . 'config' . DS . 'app.php';
@@ -235,7 +222,9 @@ class Console
         self::configureEnvironment($name);
         print("Environment Security Configurations have been successfully set up.\n");
         print("Please rename your root folder (i.e. your current folder) to {$name}. \n");
-        print("See config/app.php & .env files of your application to make changes.\n");
+        print("See config/app.php & .env files of your application to make changes.\n 
+            You can now delete the .env.example file"
+        );
         exit();
     }
 
